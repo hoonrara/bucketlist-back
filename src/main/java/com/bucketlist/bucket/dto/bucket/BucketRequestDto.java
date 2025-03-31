@@ -16,6 +16,7 @@ public class BucketRequestDto {
     private String title;
     private String description;
     private Category category;
+    private boolean isPublic;
 
     public Bucket toEntity(User user) {
         return Bucket.builder()
@@ -24,6 +25,7 @@ public class BucketRequestDto {
                 .description(this.description)
                 .category(this.category)
                 .isCompleted(false) // 생성 시 기본값
+                .isPublic(this.isPublic)
                 .build();
     }
 }

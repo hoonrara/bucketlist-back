@@ -1,11 +1,12 @@
 package com.bucketlist.bucket.controller;
 
-
-import com.bucketlist.bucket.domain.User;
+import com.bucketlist.bucket.domain.Category;
 import com.bucketlist.bucket.dto.bucket.*;
+import com.bucketlist.bucket.security.CustomUserDetails;
 import com.bucketlist.bucket.service.BucketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,68 +18,104 @@ public class BucketController {
 
     private final BucketService bucketService;
 
-    // ✅ 버킷 생성
     @PostMapping
-    public ResponseEntity<BucketResponseDto> createBucket(@RequestBody BucketRequestDto request) {
-        // TODO: 로그인 연동 전까지는 임시 유저 사용
-        User user = dummyUser();
-        return ResponseEntity.ok(bucketService.createBucket(user, request));
+    public ResponseEntity<BucketResponseDto> createBucket(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                          @RequestBody BucketRequestDto request) {
+        return ResponseEntity.ok(bucketService.createBucket(userDetails.getUser(), request));
     }
 
-    // ✅ 버킷 전체 조회 (선택적 완료 여부 필터링)
     @GetMapping
-    public ResponseEntity<List<BucketResponseDto>> getBuckets(@RequestParam Long userId,
+    public ResponseEntity<List<BucketResponseDto>> getBuckets(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                               @RequestParam(required = false) Boolean completed) {
-        return ResponseEntity.ok(bucketService.getBuckets(userId, completed));
+        return ResponseEntity.ok(bucketService.getBuckets(userDetails.getUser().getId(), completed));
     }
 
-    // ✅ 버킷 단건 조회
     @GetMapping("/{id}")
-    public ResponseEntity<BucketResponseDto> getBucket(@PathVariable Long id) {
-        return ResponseEntity.ok(bucketService.getBucket(id));
+    public ResponseEntity<BucketResponseDto> getBucket(@PathVariable Long id,
+                                                       @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(bucketService.getBucket(id, userDetails.getUser()));
     }
 
-    // ✅ 제목 수정
     @PatchMapping("/{id}/title")
     public ResponseEntity<Void> updateTitle(@PathVariable Long id,
-                                            @RequestBody TitleUpdateRequest request) {
-        bucketService.updateTitle(id, request);
+                                            @RequestBody TitleUpdateRequest request,
+                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bucketService.updateTitle(id, request, userDetails.getUser().getId());
         return ResponseEntity.ok().build();
     }
 
-    // ✅ 설명 수정
     @PatchMapping("/{id}/description")
     public ResponseEntity<Void> updateDescription(@PathVariable Long id,
-                                                  @RequestBody DescriptionUpdateRequest request) {
-        bucketService.updateDescription(id, request);
+                                                  @RequestBody DescriptionUpdateRequest request,
+                                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bucketService.updateDescription(id, request, userDetails.getUser().getId());
         return ResponseEntity.ok().build();
     }
 
-    // ✅ 후기 수정
     @PatchMapping("/{id}/review")
     public ResponseEntity<Void> updateReview(@PathVariable Long id,
-                                             @RequestBody ReviewUpdateRequest request) {
-        bucketService.updateReview(id, request);
+                                             @RequestBody ReviewUpdateRequest request,
+                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bucketService.updateReview(id, request, userDetails.getUser().getId());
         return ResponseEntity.ok().build();
     }
 
-    // ✅ 완료 여부 + 날짜 수정
     @PatchMapping("/{id}/completion")
     public ResponseEntity<Void> updateCompletion(@PathVariable Long id,
-                                                 @RequestBody CompletionStatusUpdateRequest request) {
-        bucketService.updateCompletion(id, request);
+                                                 @RequestBody CompletionStatusUpdateRequest request,
+                                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bucketService.updateCompletion(id, request, userDetails.getUser().getId());
         return ResponseEntity.ok().build();
     }
 
-    // ✅ 버킷 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBucket(@PathVariable Long id) {
-        bucketService.deleteBucket(id);
+    public ResponseEntity<Void> deleteBucket(@PathVariable Long id,
+                                             @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bucketService.deleteBucket(id, userDetails.getUser().getId());
         return ResponseEntity.ok().build();
     }
 
-    // ❗ 로그인 연동 전 임시 유저 주입
-    private User dummyUser() {
-        return User.builder().id(1L).build();
+    @PatchMapping("/{id}/publicity")
+    public ResponseEntity<Void> updatePublicity(@PathVariable Long id,
+                                                @RequestBody PublicityUpdateRequest request,
+                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bucketService.updatePublicity(id, request.isPublic(), userDetails.getUser().getId());
+        return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/public")
+    public ResponseEntity<List<BucketResponseDto>> getPublicBuckets() {
+        return ResponseEntity.ok(bucketService.getPublicBuckets());
+    }
+
+    @GetMapping("/public/search")
+    public ResponseEntity<List<BucketResponseDto>> searchPublicBuckets(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Category category,
+            @RequestParam(required = false, defaultValue = "latest") String sort
+    ) {
+        return ResponseEntity.ok(bucketService.searchPublicBuckets(keyword, category, sort));
+    }
+
+    // ✅ 좋아요 토글 (POST /buckets/{id}/like)
+    @PostMapping("/{id}/like")
+    public ResponseEntity<Void> toggleLike(@PathVariable Long id,
+                                           @AuthenticationPrincipal CustomUserDetails userDetails) {
+        bucketService.toggleLike(id, userDetails.getUser());
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}/like-count")
+    public ResponseEntity<Long> getLikeCount(@PathVariable Long id) {
+        long count = bucketService.getLikeCount(id);
+        return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/{id}/liked")
+    public ResponseEntity<Boolean> hasLiked(@PathVariable Long id,
+                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        boolean liked = bucketService.hasLiked(id, userDetails.getUser());
+        return ResponseEntity.ok(liked);
+    }
+
 }

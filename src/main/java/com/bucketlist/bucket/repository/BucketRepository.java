@@ -12,5 +12,8 @@ public interface BucketRepository extends JpaRepository<Bucket, Long> {
 
     // 완료 여부로 필터링
     List<Bucket> findAllByUserIdAndIsCompleted(Long userId, boolean isCompleted);
+
+    List<Bucket> findAllByIsPublicTrue();
+
 }
 

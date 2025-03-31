@@ -1,33 +1,35 @@
 package com.bucketlist.bucket.service;
 
+import com.bucketlist.bucket.domain.Category;
 import com.bucketlist.bucket.domain.User;
 import com.bucketlist.bucket.dto.bucket.*;
 
 import java.util.List;
 
 public interface BucketService {
-
-    // 버킷 생성
     BucketResponseDto createBucket(User user, BucketRequestDto request);
+    List<BucketResponseDto> getBuckets(Long userId, Boolean completed);
+    BucketResponseDto getBucket(Long bucketId, User user);
 
-    // 전체 목록 조회 (필터: 전체 / 완료 / 미완료)
-    List<BucketResponseDto> getBuckets(Long userId, Boolean isCompleted);
+    void updateTitle(Long bucketId, TitleUpdateRequest request, Long userId);
+    void updateDescription(Long bucketId, DescriptionUpdateRequest request, Long userId);
+    void updateReview(Long bucketId, ReviewUpdateRequest request, Long userId);
+    void updateCompletion(Long bucketId, CompletionStatusUpdateRequest request, Long userId);
+    void deleteBucket(Long bucketId, Long userId);
+    void updatePublicity(Long bucketId, boolean isPublic, Long userId);
+    List<BucketResponseDto> getPublicBuckets();
+    // 인터페이스
+    List<BucketResponseDto> searchPublicBuckets(String keyword, Category category, String sort);
 
-    // 단건 조회
-    BucketResponseDto getBucket(Long bucketId);
+    // 인터페이스에 추가
+    void toggleLike(Long bucketId, User user);
 
-    // 제목 수정
-    void updateTitle(Long bucketId, TitleUpdateRequest request);
+    // 인터페이스
+    long getLikeCount(Long bucketId);
 
-    // 설명 수정
-    void updateDescription(Long bucketId, DescriptionUpdateRequest request);
+    // 인터페이스
+    boolean hasLiked(Long bucketId, User user);
 
-    // 후기 수정
-    void updateReview(Long bucketId, ReviewUpdateRequest request);
 
-    // 완료 상태 수정
-    void updateCompletion(Long bucketId, CompletionStatusUpdateRequest request);
 
-    // 삭제
-    void deleteBucket(Long bucketId);
 }

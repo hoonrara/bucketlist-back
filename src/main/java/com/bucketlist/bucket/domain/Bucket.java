@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "buckets")
@@ -32,9 +34,17 @@ public class Bucket {
 
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    private boolean isPublic = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToMany(mappedBy = "bucket")
+    @Builder.Default
+    private List<BucketLike> bucketLikes = new ArrayList<>();
+
 
     @PrePersist
     protected void onCreate() {
@@ -66,5 +76,9 @@ public class Bucket {
     public void markNotCompleted() {
         this.isCompleted = false;
         this.completedAt = null;
+    }
+
+    public void updatePublic(boolean isPublic) {
+        this.isPublic = isPublic;
     }
 }

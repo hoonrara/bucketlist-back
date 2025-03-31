@@ -23,8 +23,12 @@ public class BucketResponseDto {
     private LocalDate completedAt;
     private String review;
     private LocalDateTime createdAt;
+    private boolean isPublic;
+    private Long likeCount;      // 👍 좋아요 수
+    private Boolean likedByMe;   // ✅ 내가 눌렀는지
 
-    public static BucketResponseDto from(Bucket bucket) {
+
+    public static BucketResponseDto from(Bucket bucket, Long likeCount, Boolean likedByMe) {
         return BucketResponseDto.builder()
                 .id(bucket.getId())
                 .title(bucket.getTitle())
@@ -34,6 +38,9 @@ public class BucketResponseDto {
                 .completedAt(bucket.getCompletedAt())
                 .review(bucket.getReview())
                 .createdAt(bucket.getCreatedAt())
+                .likeCount(likeCount)
+                .likedByMe(likedByMe)
                 .build();
     }
+
 }
